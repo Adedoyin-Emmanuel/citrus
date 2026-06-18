@@ -11,3 +11,7 @@
 .roo/
 .trae/
 .windsurf/
+
+.build/
+DerivedData/
+*.xcuserdata/
