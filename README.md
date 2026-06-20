@@ -4,33 +4,55 @@ The lightweight macOS menu bar app for converting, compressing, and optimizing i
 
 ## Product Direction
 
-Citrus is not a visual wrapper around FFmpeg. It is an outcome-first macOS utility for people who want media to be ready for the next place it needs to go.
+Citrus is not a visual wrapper around FFmpeg. It is a dead-simple macOS utility for people who just want their images and videos to be smaller.
 
-The interface should use plain goals:
+The interface asks for one thing — how small — in plain language:
 
-- Make Smaller
+- Smaller
+- Balanced
 - Best Quality
-- Web Optimized
-- Email Friendly
-- GitHub Upload
 
-Technical encoding details belong inside the processing layer, not in the primary workflow.
+Drop files, pick a level, hit Compress. Technical encoding details (format, resolution, bitrate) are handled automatically inside the processing layer, never surfaced in the primary workflow.
 
 ## Phase 1
 
 The current foundation includes:
 
 - SwiftPM macOS app target
-- SwiftUI `MenuBarExtra` entry point
-- Floating panel with drag and drop
+- Status-bar popover entry point
+- Floating panel with drag and drop and multi-file import
 - File picker import
 - Queue models and view model
-- Mock async processing engine
-- Job progress, status, cancel, remove, and clear-completed actions
+- Real native processing engine (no third-party binaries):
+  - Images via ImageIO — resize + lossy re-encode to JPEG / PNG / HEIC
+  - Video via AVFoundation — transcode/compress to MP4 / MOV at chosen resolution
+- Kind-aware controls (image vs video properties resolved automatically)
+- Output respects the chosen location (Downloads by default), with non-clobbering names
+- Job progress, status, cancel, remove, and clear-finished actions
+- Per-job size savings readout
 - UserDefaults-backed settings
-- Notification infrastructure
+- Local "job finished" notifications
 
-Real FFmpeg processing is intentionally deferred until the product flow and architecture are stable.
+Citrus uses Apple's native media frameworks rather than wrapping FFmpeg, keeping the app small, fast, and dependency-free.
+
+## Running
+
+For development:
+
+```bash
+cd app
+swift run
+```
+
+To produce a real, notification-capable `Citrus.app` bundle:
+
+```bash
+cd app
+./Scripts/build-app.sh
+open .build/Citrus.app
+```
+
+Notifications require the bundled `.app` (they are suppressed when launched via `swift run` because there is no bundle identity).
 
 ## Architecture
 

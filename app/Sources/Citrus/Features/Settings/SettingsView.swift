@@ -16,16 +16,10 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Processing") {
-                Picker("Default image preset", selection: $settings.defaultImagePreset) {
-                    ForEach(ProcessingPreset.allCases) { preset in
-                        Text(preset.title).tag(preset)
-                    }
-                }
-
-                Picker("Default video preset", selection: $settings.defaultVideoPreset) {
-                    ForEach(ProcessingPreset.allCases) { preset in
-                        Text(preset.title).tag(preset)
+            Section("Compression") {
+                Picker("Default level", selection: $settings.defaultQuality) {
+                    ForEach(QualityPreference.allCases) { quality in
+                        Text(quality.title).tag(quality)
                     }
                 }
             }

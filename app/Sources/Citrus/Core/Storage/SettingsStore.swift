@@ -15,22 +15,13 @@ final class SettingsStore: ObservableObject {
         didSet { objectWillChange.send() }
     }
 
-    @AppStorage("defaultImagePreset") var defaultImagePresetRaw = ProcessingPreset.makeSmaller.rawValue {
+    @AppStorage("defaultQuality") var defaultQualityRaw = QualityPreference.balanced.rawValue {
         didSet { objectWillChange.send() }
     }
 
-    @AppStorage("defaultVideoPreset") var defaultVideoPresetRaw = ProcessingPreset.webOptimized.rawValue {
-        didSet { objectWillChange.send() }
-    }
-
-    var defaultImagePreset: ProcessingPreset {
-        get { ProcessingPreset(rawValue: defaultImagePresetRaw) ?? .makeSmaller }
-        set { defaultImagePresetRaw = newValue.rawValue }
-    }
-
-    var defaultVideoPreset: ProcessingPreset {
-        get { ProcessingPreset(rawValue: defaultVideoPresetRaw) ?? .webOptimized }
-        set { defaultVideoPresetRaw = newValue.rawValue }
+    var defaultQuality: QualityPreference {
+        get { QualityPreference(rawValue: defaultQualityRaw) ?? .balanced }
+        set { defaultQualityRaw = newValue.rawValue }
     }
 
     var outputLocationChoice: OutputLocation {

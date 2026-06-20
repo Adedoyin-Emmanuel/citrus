@@ -8,74 +8,96 @@ struct QueueRowView: View {
         HStack(spacing: 12) {
             fileIcon
 
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(job.fileName)
-                            .font(.callout.weight(.medium))
-                            .lineLimit(1)
-                        Text("\(job.fileSize.citrusFileSize) • \(job.preset.title)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(job.fileName)
+                        .font(.callout.weight(.medium))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
 
-                    Spacer()
+                    Spacer(minLength: 8)
 
                     Text(statusText)
-                        .font(.caption.weight(.medium))
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(statusColor)
+                        .monospacedDigit()
                 }
 
-                ProgressView(value: job.progress)
-                    .progressViewStyle(.linear)
-                    .tint(statusColor)
+                Text(detailText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+
+                if job.status == .processing {
+                    CitrusProgressBar(value: job.progress, tint: statusColor)
+                        .padding(.top, 2)
+                }
             }
 
             actionButton
         }
-        .padding(12)
-        .background(.background.opacity(0.62), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
+        .background(.background.opacity(0.55), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     private var fileIcon: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(statusColor.opacity(0.13))
-            Image(systemName: job.mediaKind == .image ? "photo" : "film")
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(statusColor.opacity(0.14))
+            Image(systemName: "film")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(statusColor)
         }
-        .frame(width: 34, height: 34)
+        .frame(width: 32, height: 32)
     }
 
     @ViewBuilder
     private var actionButton: some View {
         switch job.status {
         case .waiting, .processing:
-            Button {
-                queue.cancel(job)
-            } label: {
-                Image(systemName: "xmark")
+            iconButton("xmark", label: "Cancel \(job.fileName)") { queue.cancel(job) }
+        case .completed:
+            HStack(spacing: 2) {
+                iconButton("arrow.up.forward.square", label: "Open \(job.fileName) in Finder", help: "Open in Finder") {
+                    queue.revealOutput(job)
+                }
+                iconButton("trash", label: "Remove \(job.fileName)") { queue.remove(job) }
             }
-            .buttonStyle(.borderless)
-            .accessibilityLabel("Cancel \(job.fileName)")
-        case .completed, .failed, .cancelled:
-            Button {
-                queue.remove(job)
-            } label: {
-                Image(systemName: "trash")
-            }
-            .buttonStyle(.borderless)
-            .accessibilityLabel("Remove \(job.fileName)")
+        case .failed, .cancelled:
+            iconButton("trash", label: "Remove \(job.fileName)") { queue.remove(job) }
         }
     }
 
-    private var statusText: String {
-        if job.status == .processing, let seconds = job.estimatedSecondsRemaining {
-            return seconds.citrusDuration
+    private func iconButton(
+        _ systemName: String,
+        label: String,
+        help: String? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.callout)
+                .frame(width: 26, height: 26)
+                .contentShape(Rectangle())
         }
-        return job.status.title
+        .buttonStyle(.borderless)
+        .help(help ?? label)
+        .accessibilityLabel(label)
+    }
+
+    private var statusText: String {
+        switch job.status {
+        case .processing:
+            return "\(Int(job.progress * 100))%"
+        case .completed:
+            if let percent = savingsPercent {
+                return percent > 0 ? "−\(percent)%" : "Done"
+            }
+            return "Done"
+        default:
+            return job.status.title
+        }
     }
 
     private var statusColor: Color {
@@ -86,5 +108,30 @@ struct QueueRowView: View {
         case .failed: .red
         case .cancelled: .orange
         }
+    }
+
+    private var detailText: String {
+        switch job.status {
+        case .waiting:
+            "\(job.fileSize.citrusFileSize) - ready"
+        case .processing:
+            "\(job.fileSize.citrusFileSize) - compressing…"
+        case .completed:
+            if let outputSize = job.outputFileSize {
+                "\(job.fileSize.citrusFileSize) -> \(outputSize.citrusFileSize)"
+            } else {
+                "Done"
+            }
+        case .failed:
+            job.errorMessage ?? "Failed"
+        case .cancelled:
+            "Cancelled"
+        }
+    }
+
+    private var savingsPercent: Int? {
+        guard let outputSize = job.outputFileSize, job.fileSize > 0 else { return nil }
+        let ratio = 1 - (Double(outputSize) / Double(job.fileSize))
+        return max(0, Int((ratio * 100).rounded()))
     }
 }

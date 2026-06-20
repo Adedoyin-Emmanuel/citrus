@@ -10,8 +10,11 @@ struct QueueListView: View {
                     QueueRowView(job: job)
                 }
             }
-            .padding(12)
+            .padding(.horizontal, 20)
+            .padding(.top, 2)
+            .padding(.bottom, 16)
         }
-        .frame(minHeight: 300)
+        .frame(maxHeight: .infinity)
+        .scrollIndicators(.never)
     }
 }
