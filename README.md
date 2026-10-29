@@ -52,6 +52,16 @@ cd app
 open .build/Citrus.app
 ```
 
+To install Citrus and get a global `citrus` command:
+
+```bash
+cd app
+./Scripts/install.sh
+citrus
+```
+
+This builds the bundle, copies it to `~/Applications/Citrus.app`, and installs a `citrus` launcher to `~/.local/bin` (make sure that directory is on your `PATH`). Override the locations with `CITRUS_APP_DIR` and `CITRUS_BIN_DIR`. Re-run the script after pulling changes to update the installed app.
+
 Notifications require the bundled `.app` (they are suppressed when launched via `swift run` because there is no bundle identity).
 
 ## Architecture
